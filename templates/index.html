@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Agendamento - Nail Designer</title>
+</head>
+<body>
+
+<h2>Agende seu horário</h2>
+
+<form id="form-agendamento">
+    <label>Nome:</label><br>
+    <input type="text" id="nome" required><br><br>
+
+    <label>Data:</label><br>
+    <input type="date" id="data" required><br><br>
+
+    <label>Horário:</label><br>
+    <select id="horario" required></select><br><br>
+
+    <label>Serviço:</label><br>
+    <input type="text" id="servico" required><br><br>
+
+    <button type="submit">Agendar pelo WhatsApp</button>
+</form>
+
+<script>
+async function carregarHorarios() {
+    const res = await fetch("/horarios");
+    const data = await res.json();
+
+    const select = document.getElementById("horario");
+    select.innerHTML = "";
+
+    data.horarios_disponiveis.forEach(h => {
+        const option = document.createElement("option");
+        option.value = h;
+        option.text = h;
+        select.appendChild(option);
+    });
+}
+
+document.getElementById("form-agendamento").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const payload = {
+        nome: document.getElementById("nome").value,
+        data: document.getElementById("data").value,
+        horario: document.getElementById("horario").value,
+        servico: document.getElementById("servico").value
+    };
+
+    const res = await fetch("/agendamentos", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (data.whatsapp_url) {
+        window.location.href = data.whatsapp_url;
+    } else {
+        alert("Erro ao criar agendamento");
+    }
+});
+
+carregarHorarios();
+</script>
+
+</body>
+</html>
