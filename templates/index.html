@@ -1,9 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Agendamento - Nail Designer</title>
+</head>
+<body>
+
+<p style="color:red; font-weight:bold;">
+    VERSAO NOVA DO HTML
+</p>
+
+<h2>Agende seu horário</h2>
+
+<form id="form-agendamento">
+    <label>Nome:</label><br>
+    <input type="text" id="nome" required><br><br>
+
+    <label>Data:</label><br>
+    <input type="date" id="data" required><br><br>
+
+    <label>Horário:</label><br>
+    <select id="horario" required>
+        <option value="">Selecione uma data primeiro</option>
+    </select><br><br>
+
+    <label>Serviço:</label><br>
+    <input type="text" id="servico" required><br><br>
+
+    <button type="submit">Agendar pelo WhatsApp</button>
+</form>
+
 <script>
 const dataInput = document.getElementById("data");
 const horarioSelect = document.getElementById("horario");
 
 dataInput.addEventListener("change", async () => {
     const dataSelecionada = dataInput.value;
+
     if (!dataSelecionada) return;
 
     horarioSelect.innerHTML = "<option>Carregando...</option>";
@@ -14,7 +47,7 @@ dataInput.addEventListener("change", async () => {
 
         horarioSelect.innerHTML = "";
 
-        if (horarios.length === 0) {
+        if (!Array.isArray(horarios) || horarios.length === 0) {
             horarioSelect.innerHTML = "<option>Nenhum horário disponível</option>";
             return;
         }
@@ -25,6 +58,7 @@ dataInput.addEventListener("change", async () => {
             option.textContent = h;
             horarioSelect.appendChild(option);
         });
+
     } catch (err) {
         horarioSelect.innerHTML = "<option>Erro ao carregar horários</option>";
         console.error(err);
@@ -43,7 +77,7 @@ document.getElementById("form-agendamento").addEventListener("submit", async fun
 
     const res = await fetch("/agendamentos", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
     });
 
@@ -56,3 +90,6 @@ document.getElementById("form-agendamento").addEventListener("submit", async fun
     }
 });
 </script>
+
+</body>
+</html>
