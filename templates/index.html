@@ -1,11 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Agendamento - Nail Designer</title>
+</head>
+<body>
+
+<h2>Agende seu horário</h2>
+
+<form id="form-agendamento">
+    <label>Nome:</label><br>
+    <input type="text" id="nome" required><br><br>
+
+    <label>Data:</label><br>
+    <input type="date" id="data" required><br><br>
+
+    <label>Horário:</label><br>
+    <select id="horario" required>
+        <option value="">Selecione uma data</option>
+    </select><br><br>
+
+    <label>Serviço:</label><br>
+    <input type="text" id="servico" required><br><br>
+
+    <button type="submit">Agendar pelo WhatsApp</button>
+</form>
+
 <script>
 const dataInput = document.getElementById("data");
 const horarioSelect = document.getElementById("horario");
 
-// Quando a data mudar, carrega os horários
 dataInput.addEventListener("change", async () => {
     const dataSelecionada = dataInput.value;
-
     if (!dataSelecionada) return;
 
     horarioSelect.innerHTML = "<option>Carregando...</option>";
@@ -34,7 +60,6 @@ dataInput.addEventListener("change", async () => {
     }
 });
 
-// Envio do formulário
 document.getElementById("form-agendamento").addEventListener("submit", async function(e) {
     e.preventDefault();
 
@@ -60,3 +85,6 @@ document.getElementById("form-agendamento").addEventListener("submit", async fun
     }
 });
 </script>
+
+</body>
+</html>
