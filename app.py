@@ -11,6 +11,21 @@ from typing import List
 from datetime import date
 from urllib.parse import quote
 
+from datetime import datetime
+
+HORARIOS_FUNCIONAMENTO = [
+    "10:00",
+    "11:00",
+    "13:00",
+    "14:00",
+    "15:00",
+    "16:00",
+    "17:00",
+    "18:00"
+]
+
+DIAS_ATENDIMENTO = [1, 2, 3, 4, 5]  # terça(1) a sábado(5)
+
 app = FastAPI(title="Agenda Nail Designer API")
 criar_tabela()
 
@@ -35,18 +50,16 @@ agendamentos: List[Agendamento] = []
 
 # 📌 Listar horários disponíveis
 @app.get("/horarios")
-def listar_horarios():
-    conn = get_connection()
-    cursor = conn.cursor()
+def listar_horarios(data: str):
+    data_obj = datetime.strptime(data, "%Y-%m-%d")
+    dia_semana = data_obj.weekday()
 
-    cursor.execute("SELECT horario FROM agendamentos")
-    ocupados = {row[0] for row in cursor.fetchall()}
+    # Se não for dia de atendimento, retorna vazio
+    if dia_semana not in DIAS_ATENDIMENTO:
+        return []
 
-    conn.close()
-
-    disponiveis = [h for h in HORARIOS_FIXOS if h not in ocupados]
-
-    return {"horarios_disponiveis": disponiveis}
+    # Por enquanto, retorna todos os horários do salão
+    return HORARIOS_FUNCIONAMENTO
 
 
 # 📌 Criar agendamento e gerar link do WhatsApp
