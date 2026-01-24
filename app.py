@@ -38,16 +38,6 @@ class Agendamento(BaseModel):
     servico: str
 
 
-# 📌 Horários fixos (MVP)
-HORARIOS_FIXOS = [
-    "09:00", "10:00", "11:00",
-    "13:00", "14:00", "15:00",
-    "16:00"
-]
-
-agendamentos: List[Agendamento] = []
-
-
 # 📌 Listar horários disponíveis
 @app.get("/horarios")
 def listar_horarios(data: str):
@@ -65,9 +55,8 @@ def listar_horarios(data: str):
 # 📌 Criar agendamento e gerar link do WhatsApp
 @app.post("/agendamentos")
 def criar_agendamento(agendamento: Agendamento):
-
-    if agendamento.horario not in HORARIOS_FIXOS:
-        raise HTTPException(status_code=400, detail="Horário inválido")
+     if agendamento.horario not in HORARIOS_FUNCIONAMENTO:
+       raise HTTPException(status_code=400, detail="Horário inválido")
 
     conn = get_connection()
     cursor = conn.cursor()
