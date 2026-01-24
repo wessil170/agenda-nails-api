@@ -1,0 +1,87 @@
+<h3>Novo Agendamento Manual</h3>
+
+<form id="form-admin">
+    <input type="text" id="nome" placeholder="Nome" required>
+    <input type="date" id="data" required>
+    <input type="time" id="horario" required>
+    <input type="text" id="servico" placeholder="Serviço" required>
+    <button type="submit">Adicionar</button>
+</form>
+
+<hr>
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel Admin - Agenda</title>
+</head>
+<body>
+
+<h2>Painel Administrativo</h2>
+
+<table border="1" cellpadding="8">
+    <tr>
+        <th>Nome</th>
+        <th>Data</th>
+        <th>Horário</th>
+        <th>Serviço</th>
+        <th>Ação</th>
+    </tr>
+
+    {% for a in agendamentos %}
+    <tr>
+        <td>{{ a[1] }}</td>
+        <td>{{ a[2] }}</td>
+        <td>{{ a[3] }}</td>
+        <td>{{ a[4] }}</td>
+        <td>
+            <button onclick="cancelar({{ a[0] }})">
+                Cancelar
+            </button>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<script>
+async function cancelar(id) {
+    if (!confirm("Deseja cancelar este agendamento?")) return;
+
+    await fetch(`/admin/cancelar/${id}`, {
+        method: "POST"
+    });
+
+    alert("Agendamento cancelado");
+    location.reload();
+}
+</script>
+
+<script>
+document.getElementById("form-admin").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const payload = {
+        nome: document.getElementById("nome").value,
+        data: document.getElementById("data").value,
+        horario: document.getElementById("horario").value,
+        servico: document.getElementById("servico").value
+    };
+
+    const res = await fetch("/admin/agendamentos", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+        alert("Agendamento adicionado");
+        location.reload();
+    } else {
+        alert("Erro: horário indisponível ou inválido");
+    }
+});
+</script>
+
+</body>
+</html>

@@ -1,11 +1,15 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from datetime import date, datetime
 from urllib.parse import quote
 from database import criar_tabela, get_connection
+from fastapi.templating import Jinja2Templates
+from pathlib import Path
 
 app = FastAPI(title="Agenda Nail Designer API")
+BASE_DIR = Path(__file__).resolve().parent
+templates = Jinja2Templates(directory=BASE_DIR / "templates")
 criar_tabela()
 
 HORARIOS_FUNCIONAMENTO = [
@@ -100,3 +104,78 @@ Me chamo {agendamento.nome} e gostaria de agendar um horário.
 def pagina_inicial():
     with open("templates/index.html", encoding="utf-8") as f:
         return f.read()
+# =====================
+# PAINEL ADMIN
+# =====================
+
+@app.get("/admin", response_class=HTMLResponse)
+def painel_admin(request: Request):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id, nome, data, horario, servico
+        FROM agendamentos
+        ORDER BY data, horario
+    """)
+    agendamentos = cursor.fetchall()
+    conn.close()
+
+    return templates.TemplateResponse(
+        "admin.html",
+        {
+            "request": request,
+            "agendamentos": agendamentos
+        }
+    )
+
+
+@app.post("/admin/cancelar/{id}")
+def cancelar_agendamento(id: int):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "DELETE FROM agendamentos WHERE id = ?",
+        (id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return {"mensagem": "Agendamento cancelado"}
+@app.post("/admin/agendamentos")
+def criar_agendamento_admin(agendamento: Agendamento):
+
+    if agendamento.horario not in HORARIOS_FUNCIONAMENTO:
+        raise HTTPException(status_code=400, detail="Horário inválido")
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT 1 FROM agendamentos WHERE data = ? AND horario = ?",
+        (str(agendamento.data), agendamento.horario)
+    )
+
+    if cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=400, detail="Horário indisponível")
+
+    cursor.execute(
+        """
+        INSERT INTO agendamentos (nome, data, horario, servico)
+        VALUES (?, ?, ?, ?)
+        """,
+        (
+            agendamento.nome,
+            str(agendamento.data),
+            agendamento.horario,
+            agendamento.servico
+        )
+    )
+
+    conn.commit()
+    conn.close()
+
+    return {"mensagem": "Agendamento criado com sucesso"}
