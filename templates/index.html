@@ -1,45 +1,40 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <title>Agendamento - Nail Designer</title>
-</head>
-<body>
-
-<h2>Agende seu horário</h2>
-
-<form id="form-agendamento">
-    <label>Nome:</label><br>
-    <input type="text" id="nome" required><br><br>
-
-    <label>Data:</label><br>
-    <input type="date" id="data" required><br><br>
-
-    <label>Horário:</label><br>
-    <select id="horario" required></select><br><br>
-
-    <label>Serviço:</label><br>
-    <input type="text" id="servico" required><br><br>
-
-    <button type="submit">Agendar pelo WhatsApp</button>
-</form>
-
 <script>
-async function carregarHorarios() {
-    const res = await fetch("/horarios");
-    const data = await res.json();
+const dataInput = document.getElementById("data");
+const horarioSelect = document.getElementById("horario");
 
-    const select = document.getElementById("horario");
-    select.innerHTML = "";
+// Quando a data mudar, carrega os horários
+dataInput.addEventListener("change", async () => {
+    const dataSelecionada = dataInput.value;
 
-    data.horarios_disponiveis.forEach(h => {
-        const option = document.createElement("option");
-        option.value = h;
-        option.text = h;
-        select.appendChild(option);
-    });
-}
+    if (!dataSelecionada) return;
 
+    horarioSelect.innerHTML = "<option>Carregando...</option>";
+
+    try {
+        const res = await fetch(`/horarios?data=${dataSelecionada}`);
+        const horarios = await res.json();
+
+        horarioSelect.innerHTML = "";
+
+        if (horarios.length === 0) {
+            horarioSelect.innerHTML = "<option>Nenhum horário disponível</option>";
+            return;
+        }
+
+        horarios.forEach(h => {
+            const option = document.createElement("option");
+            option.value = h;
+            option.textContent = h;
+            horarioSelect.appendChild(option);
+        });
+
+    } catch (err) {
+        horarioSelect.innerHTML = "<option>Erro ao carregar horários</option>";
+        console.error(err);
+    }
+});
+
+// Envio do formulário
 document.getElementById("form-agendamento").addEventListener("submit", async function(e) {
     e.preventDefault();
 
@@ -56,17 +51,12 @@ document.getElementById("form-agendamento").addEventListener("submit", async fun
         body: JSON.stringify(payload)
     });
 
-    const data = await res.json();
+    const resposta = await res.json();
 
-    if (data.whatsapp_url) {
-        window.location.href = data.whatsapp_url;
+    if (resposta.whatsapp_url) {
+        window.location.href = resposta.whatsapp_url;
     } else {
         alert("Erro ao criar agendamento");
     }
 });
-
-carregarHorarios();
 </script>
-
-</body>
-</html>
