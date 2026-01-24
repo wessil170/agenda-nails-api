@@ -106,5 +106,6 @@ Me chamo {agendamento.nome} e gostaria de agendar um horário.
 
 @app.get("/", response_class=HTMLResponse)
 def pagina_inicial():
-    with open("templates/index.html", "r", encoding="utf-8") as f:
-        return f.read()
+    return """
+    <h1 style='color:red'>HTML SERVIDO PELO BACKEND</h1>
+    """
