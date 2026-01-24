@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Agendamento - Nail Designer</title>
+<meta charset="UTF-8">
+<title>Agendamento - Nail Designer</title>
 </head>
 <body>
 
@@ -31,44 +31,35 @@ const dataInput = document.getElementById("data");
 const horarioSelect = document.getElementById("horario");
 
 dataInput.addEventListener("change", async () => {
-    const dataSelecionada = dataInput.value;
-
-    if (!dataSelecionada) return;
-
+    const data = dataInput.value;
     horarioSelect.innerHTML = "<option>Carregando...</option>";
 
-    try {
-        const res = await fetch(`/horarios?data=${dataSelecionada}`);
-        const horarios = await res.json();
+    const res = await fetch(`/horarios?data=${data}`);
+    const json = await res.json();
 
-        horarioSelect.innerHTML = "";
+    horarioSelect.innerHTML = "";
 
-        if (horarios.length === 0) {
-            horarioSelect.innerHTML = "<option>Nenhum horário disponível</option>";
-            return;
-        }
-
-        horarios.forEach(h => {
-            const option = document.createElement("option");
-            option.value = h;
-            option.textContent = h;
-            horarioSelect.appendChild(option);
-        });
-
-    } catch (err) {
-        horarioSelect.innerHTML = "<option>Erro ao carregar horários</option>";
-        console.error(err);
+    if (json.horarios.length === 0) {
+        horarioSelect.innerHTML = "<option>Nenhum horário disponível</option>";
+        return;
     }
+
+    json.horarios.forEach(h => {
+        const option = document.createElement("option");
+        option.value = h;
+        option.textContent = h;
+        horarioSelect.appendChild(option);
+    });
 });
 
-document.getElementById("form-agendamento").addEventListener("submit", async (e) => {
+document.getElementById("form-agendamento").addEventListener("submit", async e => {
     e.preventDefault();
 
     const payload = {
-        nome: document.getElementById("nome").value,
-        data: document.getElementById("data").value,
-        horario: document.getElementById("horario").value,
-        servico: document.getElementById("servico").value
+        nome: nome.value,
+        data: data.value,
+        horario: horario.value,
+        servico: servico.value
     };
 
     const res = await fetch("/agendamentos", {
@@ -77,13 +68,8 @@ document.getElementById("form-agendamento").addEventListener("submit", async (e)
         body: JSON.stringify(payload)
     });
 
-    const data = await res.json();
-
-    if (data.whatsapp_url) {
-        window.location.href = data.whatsapp_url;
-    } else {
-        alert("Erro ao criar agendamento");
-    }
+    const json = await res.json();
+    window.location.href = json.whatsapp_url;
 });
 </script>
 
