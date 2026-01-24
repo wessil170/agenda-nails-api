@@ -6,10 +6,6 @@
 </head>
 <body>
 
-<p style="color:red; font-weight:bold;">
-    VERSAO NOVA DO HTML
-</p>
-
 <h2>Agende seu horário</h2>
 
 <form id="form-agendamento">
@@ -21,7 +17,7 @@
 
     <label>Horário:</label><br>
     <select id="horario" required>
-        <option value="">Selecione uma data primeiro</option>
+        <option value="">Selecione uma data</option>
     </select><br><br>
 
     <label>Serviço:</label><br>
@@ -47,7 +43,7 @@ dataInput.addEventListener("change", async () => {
 
         horarioSelect.innerHTML = "";
 
-        if (!Array.isArray(horarios) || horarios.length === 0) {
+        if (horarios.length === 0) {
             horarioSelect.innerHTML = "<option>Nenhum horário disponível</option>";
             return;
         }
@@ -65,7 +61,7 @@ dataInput.addEventListener("change", async () => {
     }
 });
 
-document.getElementById("form-agendamento").addEventListener("submit", async function(e) {
+document.getElementById("form-agendamento").addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const payload = {
@@ -77,14 +73,14 @@ document.getElementById("form-agendamento").addEventListener("submit", async fun
 
     const res = await fetch("/agendamentos", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify(payload)
     });
 
-    const resposta = await res.json();
+    const data = await res.json();
 
-    if (resposta.whatsapp_url) {
-        window.location.href = resposta.whatsapp_url;
+    if (data.whatsapp_url) {
+        window.location.href = data.whatsapp_url;
     } else {
         alert("Erro ao criar agendamento");
     }
