@@ -1,71 +1,83 @@
-<h3>Novo Agendamento Manual</h3>
-
-<form id="form-admin">
-    <input type="text" id="nome" placeholder="Nome" required>
-    <input type="date" id="data" required>
-    <input type="time" id="horario" required>
-    <input type="text" id="servico" placeholder="Serviço" required>
-    <button type="submit">Adicionar</button>
-</form>
-
-<hr>
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Painel Admin - Agenda</title>
+    <title>Painel Admin</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
+
 <body>
 
-<h2>Painel Administrativo</h2>
+<div class="container">
 
-<table border="1" cellpadding="8">
-    <tr>
-        <th>Nome</th>
-        <th>Data</th>
-        <th>Horário</th>
-        <th>Serviço</th>
-        <th>Ação</th>
-    </tr>
+    <h2>Painel Administrativo</h2>
 
-    {% for a in agendamentos %}
-    <tr>
-        <td>{{ a[1] }}</td>
-        <td>{{ a[2] }}</td>
-        <td>{{ a[3] }}</td>
-        <td>{{ a[4] }}</td>
-        <td>
-            <button onclick="cancelar({{ a[0] }})">
-                Cancelar
-            </button>
-        </td>
-    </tr>
-    {% endfor %}
-</table>
+    <h3>Novo Agendamento Manual</h3>
+
+    <form id="form-admin">
+
+        <input id="nome" placeholder="Nome" required>
+
+        <input type="date" id="data" required>
+
+        <input type="time" id="horario" required>
+
+        <select id="servico" required>
+            <option value="">Selecione o serviço</option>
+            {% for s in servicos %}
+            <option value="{{ s }}">{{ s }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Adicionar</button>
+    </form>
+
+    <div class="total">
+        Total do dia: R$ {{ total_dia }}
+    </div>
+
+    <table>
+        <tr>
+            <th>Nome</th>
+            <th>Data</th>
+            <th>Horário</th>
+            <th>Serviço</th>
+            <th>Ação</th>
+        </tr>
+
+        {% for a in agendamentos %}
+        <tr>
+            <td>{{ a[1] }}</td>
+            <td>{{ a[2] }}</td>
+            <td>{{ a[3] }}</td>
+            <td>{{ a[4] }}</td>
+            <td>
+                <button onclick="cancelar({{ a[0] }})">
+                    Cancelar
+                </button>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</div>
 
 <script>
 async function cancelar(id) {
-    if (!confirm("Deseja cancelar este agendamento?")) return;
+    if (!confirm("Cancelar agendamento?")) return;
 
-    await fetch(`/admin/cancelar/${id}`, {
-        method: "POST"
-    });
-
-    alert("Agendamento cancelado");
+    await fetch(`/admin/cancelar/${id}`, { method: "POST" });
     location.reload();
 }
-</script>
 
-<script>
-document.getElementById("form-admin").addEventListener("submit", async function(e) {
+document.getElementById("form-admin").addEventListener("submit", async e => {
     e.preventDefault();
 
     const payload = {
-        nome: document.getElementById("nome").value,
-        data: document.getElementById("data").value,
-        horario: document.getElementById("horario").value,
-        servico: document.getElementById("servico").value
+        nome: nome.value,
+        data: data.value,
+        horario: horario.value,
+        servico: servico.value
     };
 
     const res = await fetch("/admin/agendamentos", {
@@ -74,12 +86,8 @@ document.getElementById("form-admin").addEventListener("submit", async function(
         body: JSON.stringify(payload)
     });
 
-    if (res.ok) {
-        alert("Agendamento adicionado");
-        location.reload();
-    } else {
-        alert("Erro: horário indisponível ou inválido");
-    }
+    if (res.ok) location.reload();
+    else alert("Erro: horário indisponível");
 });
 </script>
 

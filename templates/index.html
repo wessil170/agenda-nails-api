@@ -1,75 +1,97 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Agendamento - Nail Designer</title>
+    <meta charset="UTF-8">
+    <title>Agendamento Nail Designer</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
+
 <body>
 
-<h2>Agende seu horário</h2>
+<div class="container">
 
-<form id="form-agendamento">
-    <label>Nome:</label><br>
-    <input type="text" id="nome" required><br><br>
+    <h2>Agende seu horário</h2>
 
-    <label>Data:</label><br>
-    <input type="date" id="data" required><br><br>
+    <form id="form">
 
-    <label>Horário:</label><br>
-    <select id="horario" required>
-        <option value="">Selecione uma data</option>
-    </select><br><br>
+        <input id="nome" placeholder="Nome" required>
 
-    <label>Serviço:</label><br>
-    <input type="text" id="servico" required><br><br>
+        <input type="date" id="data" required>
 
-    <button type="submit">Agendar pelo WhatsApp</button>
-</form>
+        <select id="horario" required>
+            <option value="">Selecione a data</option>
+        </select>
+
+        <select id="servico" required>
+            <option value="">Selecione o serviço</option>
+        </select>
+
+        <button type="submit">Agendar pelo WhatsApp</button>
+
+    </form>
+
+</div>
 
 <script>
-const dataInput = document.getElementById("data");
-const horarioSelect = document.getElementById("horario");
+document.addEventListener("DOMContentLoaded", () => {
 
-dataInput.addEventListener("change", async () => {
-    const data = dataInput.value;
-    horarioSelect.innerHTML = "<option>Carregando...</option>";
+    const data = document.getElementById("data");
+    const horario = document.getElementById("horario");
+    const servico = document.getElementById("servico");
+    const form = document.getElementById("form");
 
-    const res = await fetch(`/horarios?data=${data}`);
-    const json = await res.json();
+    // carregar serviços
+    fetch("/servicos")
+        .then(r => r.json())
+        .then(lista => {
+            lista.forEach(s => {
+                const opt = document.createElement("option");
+                opt.value = s;
+                opt.textContent = s;
+                servico.appendChild(opt);
+            });
+        });
 
-    horarioSelect.innerHTML = "";
+    // carregar horários
+    data.addEventListener("change", async () => {
+        horario.innerHTML = "<option>Carregando...</option>";
+        const res = await fetch(`/horarios?data=${data.value}`);
+        const lista = await res.json();
+        horario.innerHTML = "";
 
-    if (json.horarios.length === 0) {
-        horarioSelect.innerHTML = "<option>Nenhum horário disponível</option>";
-        return;
-    }
+        if (lista.length === 0) {
+            horario.innerHTML = "<option>Nenhum horário disponível</option>";
+            return;
+        }
 
-    json.horarios.forEach(h => {
-        const option = document.createElement("option");
-        option.value = h;
-        option.textContent = h;
-        horarioSelect.appendChild(option);
-    });
-});
-
-document.getElementById("form-agendamento").addEventListener("submit", async e => {
-    e.preventDefault();
-
-    const payload = {
-        nome: nome.value,
-        data: data.value,
-        horario: horario.value,
-        servico: servico.value
-    };
-
-    const res = await fetch("/agendamentos", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(payload)
+        lista.forEach(h => {
+            const opt = document.createElement("option");
+            opt.value = h;
+            opt.textContent = h;
+            horario.appendChild(opt);
+        });
     });
 
-    const json = await res.json();
-    window.location.href = json.whatsapp_url;
+    // submit
+    form.addEventListener("submit", async e => {
+        e.preventDefault();
+
+        const payload = {
+            nome: document.getElementById("nome").value,
+            data: data.value,
+            horario: horario.value,
+            servico: servico.value
+        };
+
+        const res = await fetch("/agendamentos", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(payload)
+        });
+
+        const json = await res.json();
+        window.location.href = json.whatsapp_url;
+    });
 });
 </script>
 
