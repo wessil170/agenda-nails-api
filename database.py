@@ -8,13 +8,14 @@ def criar_tabela():
     cursor = conn.cursor()
 
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS agendamentos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome TEXT,
-            data TEXT,
-            horario TEXT,
-            servico TEXT
-        )
+    CREATE TABLE IF NOT EXISTS agendamentos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT,
+        data TEXT,
+        hora_inicio TEXT,
+        hora_fim TEXT,
+        servico TEXT
+    )
     """)
 
     conn.commit()

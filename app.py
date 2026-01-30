@@ -1,26 +1,40 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from datetime import date, datetime, timedelta
-from urllib.parse import quote
 from pathlib import Path
+from collections import defaultdict
+from urllib.parse import quote
 
 from database import criar_tabela, get_connection
 
-app = FastAPI(title="Agenda Nail Designer")
+# =====================
+# APP
+# =====================
 
 BASE_DIR = Path(__file__).resolve().parent
 
-app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
+app = FastAPI(title="Agenda Nail Designer")
 
+app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 criar_tabela()
 
-# 🔹 Serviços com preço e duração (em minutos)
+# =====================
+# CONFIGURAÇÕES
+# =====================
+
+HORARIOS_BASE = [
+    "10:00","11:00","12:00",
+    "13:00","14:00","15:00",
+    "16:00","17:00","18:00"
+]
+
+DIAS_ATENDIMENTO = [1,2,3,4,5]  # terça a sábado
+
 SERVICOS = {
     "Pé": {"preco": 35, "duracao": 60},
     "Mão": {"preco": 30, "duracao": 60},
@@ -31,13 +45,9 @@ SERVICOS = {
     "Manutenção": {"preco": 70, "duracao": 120},
 }
 
-HORARIOS_FUNCIONAMENTO = [
-    "10:00","11:00","12:00",
-    "13:00","14:00","15:00",
-    "16:00","17:00","18:00"
-]
-
-DIAS_ATENDIMENTO = [1,2,3,4,5]  # terça a sábado
+# =====================
+# MODELO
+# =====================
 
 class Agendamento(BaseModel):
     nome: str
@@ -45,151 +55,146 @@ class Agendamento(BaseModel):
     horario: str
     servico: str
 
-# 🔹 Página cliente
+# =====================
+# UTIL
+# =====================
+
+def calcular_hora_fim(hora_inicio, duracao_min):
+    h = datetime.strptime(hora_inicio, "%H:%M")
+    return (h + timedelta(minutes=duracao_min)).strftime("%H:%M")
+
+def intervalo_conflita(inicio1, fim1, inicio2, fim2):
+    return not (fim1 <= inicio2 or inicio1 >= fim2)
+
+# =====================
+# CLIENTE
+# =====================
+
 @app.get("/", response_class=HTMLResponse)
-def pagina_inicial():
-    with open(BASE_DIR / "templates" / "index.html", encoding="utf-8") as f:
-        return f.read()
+def cliente(request: Request):
+    return templates.TemplateResponse(
+        "index.html",
+        {"request": request, "servicos": SERVICOS.keys()}
+    )
 
-# 🔹 Listar serviços
-@app.get("/servicos")
-def listar_servicos():
-    return list(SERVICOS.keys())
-
-# 🔹 Horários disponíveis considerando duração
 @app.get("/horarios")
-def listar_horarios(data: str):
+def horarios(data: str):
     data_obj = datetime.strptime(data, "%Y-%m-%d")
     if data_obj.weekday() not in DIAS_ATENDIMENTO:
-        return []
+        return {"horarios": []}
 
     conn = get_connection()
     cursor = conn.cursor()
-
-    cursor.execute(
-        "SELECT horario, servico FROM agendamentos WHERE data = ?",
-        (data,)
-    )
-    agendados = cursor.fetchall()
+    cursor.execute("""
+        SELECT hora_inicio, hora_fim FROM agendamentos WHERE data = ?
+    """, (data,))
+    ocupados = cursor.fetchall()
     conn.close()
 
-    ocupados = set()
+    livres = []
+    for h in HORARIOS_BASE:
+        inicio = h
+        fim = (datetime.strptime(h,"%H:%M")+timedelta(minutes=30)).strftime("%H:%M")
 
-    for horario, servico in agendados:
-        duracao = SERVICOS[servico]["duracao"]
-        inicio = datetime.strptime(horario, "%H:%M")
-        blocos = duracao // 60
+        conflito = any(
+            intervalo_conflita(inicio, fim, oi, of)
+            for oi, of in ocupados
+        )
+        if not conflito:
+            livres.append(h)
 
-        for i in range(blocos):
-            ocupados.add((inicio + timedelta(hours=i)).strftime("%H:%M"))
+    return {"horarios": livres}
 
-    return [h for h in HORARIOS_FUNCIONAMENTO if h not in ocupados]
-
-# 🔹 Criar agendamento
 @app.post("/agendamentos")
-def criar_agendamento(a: Agendamento):
+def criar_cliente(a: Agendamento):
     if a.servico not in SERVICOS:
         raise HTTPException(400, "Serviço inválido")
 
+    inicio = a.horario[:5]
+    duracao = SERVICOS[a.servico]["duracao"]
+    fim = calcular_hora_fim(inicio, duracao)
+
     conn = get_connection()
     cursor = conn.cursor()
+    cursor.execute("""
+        SELECT hora_inicio, hora_fim FROM agendamentos WHERE data = ?
+    """, (str(a.data),))
+    existentes = cursor.fetchall()
 
-    cursor.execute(
-        "SELECT 1 FROM agendamentos WHERE data=? AND horario=?",
-        (str(a.data), a.horario)
-    )
-    if cursor.fetchone():
-        conn.close()
-        raise HTTPException(400, "Horário indisponível")
+    for oi, of in existentes:
+        if intervalo_conflita(inicio, fim, oi, of):
+            raise HTTPException(400, "Horário indisponível")
 
-    cursor.execute(
-        "INSERT INTO agendamentos (nome, data, horario, servico) VALUES (?,?,?,?)",
-        (a.nome, str(a.data), a.horario, a.servico)
-    )
-
+    cursor.execute("""
+        INSERT INTO agendamentos (nome, data, hora_inicio, hora_fim, servico)
+        VALUES (?,?,?,?,?)
+    """, (a.nome, str(a.data), inicio, fim, a.servico))
     conn.commit()
     conn.close()
 
-    msg = f"""Olá 😊
-Sou {a.nome} e gostaria de confirmar meu agendamento:
+    msg = f"""
+Olá 😊
+Agendamento confirmado:
 
-📅 Data: {a.data}
-⏰ Horário: {a.horario}
-💅 Serviço: {a.servico}
+📅 {a.data}
+⏰ {inicio}
+💅 {a.servico}
 """
 
     return {
-        "whatsapp_url": "https://wa.me/5551991156840?text=" + quote(msg)
+        "whatsapp_url":
+        "https://wa.me/5551991156840?text="+quote(msg)
     }
+
 # =====================
-# PAINEL ADMIN
+# ADMIN
 # =====================
 
 @app.get("/admin", response_class=HTMLResponse)
-def painel_admin(request: Request):
+def admin(request: Request):
     conn = get_connection()
     cursor = conn.cursor()
-
     cursor.execute("""
-        SELECT id, nome, data, horario, servico
+        SELECT id, nome, data, hora_inicio, hora_fim, servico
         FROM agendamentos
-        ORDER BY data, horario
+        ORDER BY data, hora_inicio
     """)
-    agendamentos = cursor.fetchall()
-
-    # 🔹 calcular total do dia
-    total_dia = 0
-    for _, _, _, _, servico in agendamentos:
-        total_dia += SERVICOS[servico]["preco"]
-
+    rows = cursor.fetchall()
     conn.close()
+
+    dados = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
+
+    for id_, nome, data, hi, hf, servico in rows:
+        d = datetime.strptime(data,"%Y-%m-%d")
+        mes = d.strftime("%Y-%m")
+        semana = f"Semana {d.isocalendar().week}"
+
+        if data not in dados[mes][semana]:
+            dados[mes][semana][data] = {"total":0,"agendamentos":[]}
+
+        preco = SERVICOS[servico]["preco"]
+        dados[mes][semana][data]["total"] += preco
+        dados[mes][semana][data]["agendamentos"].append({
+            "id": id_,
+            "nome": nome,
+            "hora": f"{hi}–{hf}",
+            "servico": servico
+        })
 
     return templates.TemplateResponse(
         "admin.html",
-        {
-            "request": request,
-            "agendamentos": agendamentos,
-            "servicos": SERVICOS.keys(),
-            "total_dia": total_dia
-        }
+        {"request": request, "dados": dados, "servicos": SERVICOS.keys()}
     )
 
-
 @app.post("/admin/agendamentos")
-def criar_agendamento_admin(a: Agendamento):
-    if a.servico not in SERVICOS:
-        raise HTTPException(400, "Serviço inválido")
-
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT 1 FROM agendamentos
-        WHERE data = ? AND horario = ?
-    """, (str(a.data), a.horario))
-
-    if cursor.fetchone():
-        conn.close()
-        raise HTTPException(400, "Horário indisponível")
-
-    cursor.execute("""
-        INSERT INTO agendamentos (nome, data, horario, servico)
-        VALUES (?, ?, ?, ?)
-    """, (a.nome, str(a.data), a.horario, a.servico))
-
-    conn.commit()
-    conn.close()
-
-    return {"ok": True}
-
+def admin_add(a: Agendamento):
+    return criar_cliente(a)
 
 @app.post("/admin/cancelar/{id}")
-def cancelar_agendamento(id: int):
+def cancelar(id:int):
     conn = get_connection()
     cursor = conn.cursor()
-
     cursor.execute("DELETE FROM agendamentos WHERE id = ?", (id,))
     conn.commit()
     conn.close()
-
-    return {"ok": True}
+    return {"ok":True}

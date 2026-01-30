@@ -1,93 +1,256 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Painel Admin</title>
-    <link rel="stylesheet" href="/static/style.css">
+  <meta charset="utf-8">
+  <title>Painel Admin</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
-
 <body>
 
-<div class="container">
+<h1>Painel Admin</h1>
 
-    <h2>Painel Administrativo</h2>
+<!-- ==========================
+     FORMULÁRIO ADMIN
+     ========================== -->
+<form id="a" class="admin-form">
+  <input id="nome" placeholder="Nome">
+  <input id="data" type="date">
+  <input id="horario" type="time">
 
-    <h3>Novo Agendamento Manual</h3>
+  <select id="servico">
+    {% for s in servicos %}
+      <option>{{ s }}</option>
+    {% endfor %}
+  </select>
 
-    <form id="form-admin">
+  <button type="submit">Adicionar</button>
+</form>
 
-        <input id="nome" placeholder="Nome" required>
+<!-- ==========================
+     SELETOR DE MESES
+     ========================== -->
+<section class="month-selector">
+  <h2 class="section-title">Selecionar mês</h2>
 
-        <input type="date" id="data" required>
+  <div class="months-grid">
+    <button class="month-btn" data-month="1">Jan</button>
+    <button class="month-btn" data-month="2">Fev</button>
+    <button class="month-btn" data-month="3">Mar</button>
+    <button class="month-btn" data-month="4">Abr</button>
+    <button class="month-btn" data-month="5">Mai</button>
+    <button class="month-btn" data-month="6">Jun</button>
+    <button class="month-btn" data-month="7">Jul</button>
+    <button class="month-btn" data-month="8">Ago</button>
+    <button class="month-btn" data-month="9">Set</button>
+    <button class="month-btn" data-month="10">Out</button>
+    <button class="month-btn" data-month="11">Nov</button>
+    <button class="month-btn" data-month="12">Dez</button>
+  </div>
+</section>
 
-        <input type="time" id="horario" required>
+<!-- ==========================
+     SELETOR DE SEMANAS
+     ========================== -->
+<section class="week-selector hidden">
+  <h2 class="section-title">Selecionar semana</h2>
+  <div class="weeks-list"></div>
+</section>
 
-        <select id="servico" required>
-            <option value="">Selecione o serviço</option>
-            {% for s in servicos %}
-            <option value="{{ s }}">{{ s }}</option>
-            {% endfor %}
-        </select>
+<!-- ==========================
+     SELETOR DE DIAS
+     ========================== -->
+<section class="day-selector hidden">
+  <h2 class="section-title">Selecionar dia</h2>
+  <div class="days-list"></div>
+</section>
 
-        <button type="submit">Adicionar</button>
-    </form>
+<!-- ==========================
+     AGENDA DO DIA
+     ========================== -->
+<section class="day-agenda hidden">
+  <h2 class="section-title">Agenda do dia</h2>
+  <div class="agenda-content"></div>
+</section>
 
-    <div class="total">
-        Total do dia: R$ {{ total_dia }}
-    </div>
-
-    <table>
-        <tr>
-            <th>Nome</th>
-            <th>Data</th>
-            <th>Horário</th>
-            <th>Serviço</th>
-            <th>Ação</th>
-        </tr>
-
-        {% for a in agendamentos %}
-        <tr>
-            <td>{{ a[1] }}</td>
-            <td>{{ a[2] }}</td>
-            <td>{{ a[3] }}</td>
-            <td>{{ a[4] }}</td>
-            <td>
-                <button onclick="cancelar({{ a[0] }})">
-                    Cancelar
+<!-- ==========================
+     CONTEÚDO ANTIGO (DADOS DO BACKEND)
+     FICA ESCONDIDO E É USADO PELO JS
+     ========================== -->
+<section class="admin-old-content">
+  {% for mes, semanas in dados.items() %}
+    {% for sem, dias in semanas.items() %}
+      {% for dia, info in dias.items() %}
+        <div class="day-data" data-date="{{ dia }}">
+          <b>{{ dia }}</b> – Total R$ {{ info.total }}
+          <ul>
+            {% for a in info.agendamentos %}
+              <li>
+                {{ a.hora }} {{ a.nome }} ({{ a.servico }})
+                <button
+                  class="btn-cancelar"
+                  onclick="fetch('/admin/cancelar/{{ a.id }}',{method:'POST'}).then(()=>location.reload())">
+                  X
                 </button>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endfor %}
+    {% endfor %}
+  {% endfor %}
+</section>
 
-</div>
-
+<!-- ==========================
+     JAVASCRIPT
+     ========================== -->
 <script>
-async function cancelar(id) {
-    if (!confirm("Cancelar agendamento?")) return;
-
-    await fetch(`/admin/cancelar/${id}`, { method: "POST" });
-    location.reload();
-}
-
-document.getElementById("form-admin").addEventListener("submit", async e => {
+/* ---------- FORMULÁRIO ---------- */
+const form = document.getElementById("a");
+if (form) {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const payload = {
+    await fetch("/admin/agendamentos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         nome: nome.value,
         data: data.value,
         horario: horario.value,
         servico: servico.value
-    };
-
-    const res = await fetch("/admin/agendamentos", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(payload)
+      })
     });
 
-    if (res.ok) location.reload();
-    else alert("Erro: horário indisponível");
+    location.reload();
+  });
+}
+
+/* ---------- MESES → SEMANAS → DIAS ---------- */
+const monthButtons = document.querySelectorAll(".month-btn");
+const weekSection = document.querySelector(".week-selector");
+const weeksList = document.querySelector(".weeks-list");
+
+const daySection = document.querySelector(".day-selector");
+const daysList = document.querySelector(".days-list");
+
+const agendaSection = document.querySelector(".day-agenda");
+const agendaContent = document.querySelector(".agenda-content");
+
+const YEAR = new Date().getFullYear();
+let mesSelecionado = null;
+
+function gerarSemanas(mes) {
+  weeksList.innerHTML = "";
+  daySection.classList.add("hidden");
+  agendaSection.classList.add("hidden");
+
+  const totalDias = new Date(YEAR, mes, 0).getDate();
+  let semana = 1;
+
+  for (let dia = 1; dia <= totalDias; dia += 7) {
+    const inicio = dia;
+    const fim = Math.min(dia + 6, totalDias);
+
+    const btn = document.createElement("button");
+    btn.className = "week-btn";
+    btn.textContent = `Semana ${semana} (${String(inicio).padStart(2,"0")}–${String(fim).padStart(2,"0")})`;
+
+    btn.addEventListener("click", () => {
+  // estado visual das semanas
+  document.querySelectorAll(".week-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+
+  // 🔴 RESET DO ESTADO AO TROCAR SEMANA
+  document.querySelectorAll(".day-btn").forEach(d => d.classList.remove("active"));
+  daysList.innerHTML = "";
+  agendaContent.innerHTML = "";
+
+  daySection.classList.add("hidden");
+  agendaSection.classList.add("hidden");
+
+  // gera dias da nova semana
+  gerarDias(inicio, fim);
+});
+
+    weeksList.appendChild(btn);
+    semana++;
+  }
+}
+
+function gerarDias(inicio, fim) {
+  daysList.innerHTML = "";
+  agendaSection.classList.add("hidden");
+
+  // Descobre quais dias desse mês têm agendamento
+  const diasComAgenda = new Set();
+
+  document.querySelectorAll(".day-data").forEach(d => {
+    const data = d.dataset.date; // YYYY-MM-DD
+    const [, mesData, diaData] = data.split("-");
+
+    if (Number(mesData) === mesSelecionado) {
+      diasComAgenda.add(Number(diaData));
+    }
+  });
+
+  // Só cria botão para dias que têm agenda
+  for (let dia = inicio; dia <= fim; dia++) {
+    if (!diasComAgenda.has(dia)) continue;
+
+    const btn = document.createElement("button");
+    btn.className = "day-btn";
+    btn.textContent = `Dia ${String(dia).padStart(2,"0")}`;
+
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".day-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      mostrarAgendaDoDia(dia);
+    });
+
+    daysList.appendChild(btn);
+  }
+
+  daySection.classList.remove("hidden");
+}
+
+function mostrarAgendaDoDia(dia) {
+  agendaContent.innerHTML = "";
+
+  const dataCompleta =
+    `${YEAR}-${String(mesSelecionado).padStart(2,"0")}-${String(dia).padStart(2,"0")}`;
+
+  document.querySelectorAll(".day-data").forEach(d => {
+    if (d.dataset.date === dataCompleta) {
+      const clone = d.cloneNode(true);
+      clone.classList.add("agenda-day");
+      agendaContent.appendChild(clone);
+    }
+  });
+
+  agendaSection.classList.remove("hidden");
+}
+
+monthButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    // estado visual dos meses
+    monthButtons.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    // 🔴 RESET DO ESTADO ANTERIOR
+    daysList.innerHTML = "";
+    agendaContent.innerHTML = "";
+
+    daySection.classList.add("hidden");
+    agendaSection.classList.add("hidden");
+
+    document.querySelectorAll(".week-btn").forEach(w => w.classList.remove("active"));
+    document.querySelectorAll(".day-btn").forEach(d => d.classList.remove("active"));
+
+    // gera semanas do novo mês
+    mesSelecionado = Number(btn.dataset.month);
+    gerarSemanas(mesSelecionado);
+    weekSection.classList.remove("hidden");
+  });
 });
 </script>
 
