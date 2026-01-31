@@ -365,3 +365,8 @@ h1 {
     margin-bottom: 6px;
   }
 }
+@media (max-width: 768px) {
+  body.admin-page {
+    background: red !important;
+  }
+}
