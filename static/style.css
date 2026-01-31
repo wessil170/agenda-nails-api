@@ -1,203 +1,82 @@
-/* ==========================
-   RESET BÁSICO
-   ========================== */
-
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, Helvetica, Arial, sans-serif;
-  background: #f7f7f7;
+  padding: 10px;
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
   color: #222;
 }
 
-/* ==========================
-   CLIENTE – BASE
-   ========================== */
+/* ======================
+   FORMULÁRIOS
+   ====================== */
 
-body.client-page {
-  background: #fff6f6;
-  min-height: 100vh;
-  padding: 16px;
-}
-
-.client-title {
-  text-align: center;
-  font-size: 1.4rem;
-  margin-bottom: 20px;
-  font-weight: 600;
-}
-
-.client-card {
+form {
   background: #fff;
-  border-radius: 18px;
-  padding: 18px;
-  max-width: 420px;
-  margin: 0 auto;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-}
-
-.client-card input,
-.client-card select {
-  width: 100%;
-  padding: 14px;
-  border-radius: 14px;
-  border: 1px solid #eee;
-  font-size: 1rem;
-  margin-bottom: 12px;
-}
-
-.client-card input:focus,
-.client-card select:focus {
-  outline: none;
-  border-color: #f4a7a3;
-}
-
-.client-btn {
-  width: 100%;
-  background: #f4a7a3;
-  color: #fff;
-  border: none;
-  padding: 16px;
-  border-radius: 18px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.client-btn:hover {
-  background: #e98985;
-}
-
-/* ==========================
-   ADMIN – BASE
-   ========================== */
-
-body.admin-page {
-  min-height: 100vh;
-  background: #f4f4f4;
-}
-
-.admin-wrapper {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  padding: 12px;
-}
-
-.admin-wrapper h1 {
-  text-align: center;
-  margin-bottom: 16px;
-}
-
-/* ==========================
-   ADMIN – FORMULÁRIO
-   ========================== */
-
-.admin-wrapper form {
-  background: #fff;
-  padding: 14px;
-  border-radius: 14px;
-  margin-bottom: 16px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 10px;
-}
-
-.admin-wrapper form input,
-.admin-wrapper form select,
-.admin-wrapper form button {
   padding: 10px;
-  font-size: 0.95rem;
+  border-radius: 6px;
+  margin-bottom: 15px;
 }
 
-.admin-wrapper form button {
+input,
+select,
+button {
+  padding: 6px;
+  margin-right: 4px;
+}
+
+button {
   background: #222;
   color: #fff;
   border: none;
-  border-radius: 10px;
+  border-radius: 4px;
   cursor: pointer;
 }
 
-/* ==========================
-   ADMIN – SEÇÕES / LISTA
-   ========================== */
+/* ======================
+   SEÇÕES
+   ====================== */
 
-.admin-wrapper section {
+section {
   background: #fff;
-  padding: 14px;
-  border-radius: 14px;
-  margin-bottom: 14px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 15px;
 }
 
-.admin-wrapper h2 {
-  margin: 0 0 10px 0;
-  font-size: 1.1rem;
+h1, h2, h3 {
+  margin-top: 0;
 }
 
-.admin-wrapper h3 {
-  margin: 10px 0 6px 0;
-  font-size: 0.95rem;
-  font-weight: 600;
-}
+/* ======================
+   LISTAS / AGENDA
+   ====================== */
 
-/* ==========================
-   ADMIN – AGENDA
-   ========================== */
-
-.admin-wrapper ul {
+ul {
   list-style: none;
-  padding: 0;
-  margin: 0;
+  padding-left: 0;
 }
 
-.admin-wrapper li {
+li {
+  padding: 6px 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
-
-  padding: 12px;
-  margin-bottom: 8px;
-
-  background: #fafafa;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-
-  font-size: 0.95rem;
 }
 
 /* botão cancelar */
-.admin-wrapper li button {
-  min-width: 42px;
-  min-height: 42px;
+li button {
+  background: #e74c3c;
   border-radius: 50%;
-  border: none;
-  background: #ff5b5b;
-  color: #fff;
-  font-size: 1rem;
-  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+  padding: 0;
 }
 
-/* ==========================
-   ADMIN – MOBILE (AJUSTE FINO)
-   ========================== */
-
-@media (max-width: 768px) {
-  .admin-wrapper {
-    padding: 8px;
-  }
-
-  .admin-wrapper section {
-    padding: 12px;
-  }
-
-  .admin-wrapper li {
-    font-size: 1rem;
-  }
+.admin-old-content {
+  display: none;
 }
