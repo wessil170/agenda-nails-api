@@ -4,10 +4,19 @@
 
 body {
   margin: 0;
-  padding: 10px;
+  padding: 16px;
   font-family: Arial, sans-serif;
-  background: #f4f4f4;
+  background: #fff6f6;
   color: #222;
+}
+
+/* ======================
+   TÍTULOS
+   ====================== */
+
+h1, h2 {
+  text-align: center;
+  margin-bottom: 16px;
 }
 
 /* ======================
@@ -16,65 +25,107 @@ body {
 
 form {
   background: #fff;
-  padding: 10px;
-  border-radius: 6px;
-  margin-bottom: 15px;
+  padding: 16px;
+  border-radius: 14px;
+  margin-bottom: 18px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
 }
 
-input,
-select,
-button {
-  padding: 6px;
-  margin-right: 4px;
+input, select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
 }
 
 button {
-  background: #222;
-  color: #fff;
+  padding: 12px;
+  border-radius: 12px;
   border: none;
-  border-radius: 4px;
+  background: #111;
+  color: #fff;
+  font-size: 1rem;
   cursor: pointer;
 }
 
 /* ======================
-   SEÇÕES
+   SEÇÕES (ADMIN)
    ====================== */
 
 section {
   background: #fff;
-  padding: 10px;
-  border-radius: 6px;
-  margin-bottom: 15px;
-}
-
-h1, h2, h3 {
-  margin-top: 0;
+  padding: 14px;
+  border-radius: 14px;
+  margin-bottom: 16px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
 }
 
 /* ======================
-   LISTAS / AGENDA
+   BOTÕES DE MÊS / SEMANA / DIA
+   ====================== */
+
+.month-btn,
+.week-btn,
+.day-btn {
+  background: #f4a7a3;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.month-btn.active,
+.week-btn.active,
+.day-btn.active {
+  background: #111;
+}
+
+/* ======================
+   LISTA DA AGENDA
    ====================== */
 
 ul {
   list-style: none;
-  padding-left: 0;
+  padding: 0;
+  margin: 0;
 }
 
 li {
-  padding: 6px 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 10px;
+  margin-bottom: 8px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
 }
 
 /* botão cancelar */
 li button {
-  background: #e74c3c;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  font-size: 14px;
-  padding: 0;
+  background: #f46b6b;
+  color: #fff;
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+/* ======================
+   MOBILE
+   ====================== */
+
+@media (max-width: 768px) {
+  body {
+    padding: 12px;
+  }
 }
 
 .admin-old-content {
