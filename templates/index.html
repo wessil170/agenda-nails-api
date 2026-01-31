@@ -49,32 +49,48 @@
   </div>
 
 <script>
-/* ==========================
-   CLIENTE – HORÁRIOS
-   ========================== */
-
 const data = document.getElementById("data");
 const horario = document.getElementById("horario");
+const servico = document.getElementById("servico");
 
-data.onchange = async () => {
+async function carregarHorarios() {
+  // só busca se tiver data e serviço
+  if (!data.value || !servico.value) {
+    horario.innerHTML = '<option value="">Escolha o serviço e a data</option>';
+    return;
+  }
+
   horario.innerHTML = '<option>Carregando horários...</option>';
 
-  const r = await fetch(`/horarios?data=${data.value}`);
+  const r = await fetch(
+    `/horarios?data=${data.value}&servico=${encodeURIComponent(servico.value)}`
+  );
+
   const j = await r.json();
 
-  horario.innerHTML = '<option value="" disabled selected>Escolha o horário</option>';
+  horario.innerHTML = "";
+
+  if (!j.horarios || j.horarios.length === 0) {
+    horario.innerHTML = '<option value="">Sem horários disponíveis</option>';
+    return;
+  }
+
+  horario.innerHTML =
+    '<option value="" disabled selected>Escolha o horário</option>';
 
   j.horarios.forEach(h => {
     const o = document.createElement("option");
+    o.value = h;
     o.text = h;
     horario.add(o);
   });
-};
+}
 
-/* ==========================
-   CLIENTE – SUBMIT
-   ========================== */
+// recarrega horários quando mudar data OU serviço
+data.addEventListener("change", carregarHorarios);
+servico.addEventListener("change", carregarHorarios);
 
+// submit continua igual
 document.getElementById("f").onsubmit = async e => {
   e.preventDefault();
 

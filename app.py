@@ -78,10 +78,16 @@ def cliente(request: Request):
     )
 
 @app.get("/horarios")
-def horarios(data: str):
+def horarios(data: str, servico: str):
+    # valida serviço
+    if servico not in SERVICOS:
+        return {"horarios": []}
+
     data_obj = datetime.strptime(data, "%Y-%m-%d")
     if data_obj.weekday() not in DIAS_ATENDIMENTO:
         return {"horarios": []}
+
+    duracao = SERVICOS[servico]["duracao"]
 
     conn = get_connection()
     cursor = conn.cursor()
@@ -91,19 +97,36 @@ def horarios(data: str):
     ocupados = cursor.fetchall()
     conn.close()
 
-    livres = []
-    for h in HORARIOS_BASE:
-        inicio = h
-        fim = (datetime.strptime(h,"%H:%M")+timedelta(minutes=30)).strftime("%H:%M")
+    horarios_validos = []
 
-        conflito = any(
-            intervalo_conflita(inicio, fim, oi, of)
-            for oi, of in ocupados
-        )
-        if not conflito:
-            livres.append(h)
+    for inicio in HORARIOS_BASE:
+        inicio_dt = datetime.strptime(inicio, "%H:%M")
+        fim_dt = inicio_dt + timedelta(minutes=duracao)
 
-    return {"horarios": livres}
+        # ❌ não pode passar das 18h
+        if fim_dt.hour > 18 or (fim_dt.hour == 18 and fim_dt.minute > 0):
+            continue
+
+        # ❌ não pode cruzar almoço (12–13)
+        almoco_inicio = inicio_dt.replace(hour=12, minute=0)
+        almoco_fim = inicio_dt.replace(hour=13, minute=0)
+
+        if inicio_dt < almoco_inicio and fim_dt > almoco_inicio:
+            continue
+
+        # ❌ conflito com outro agendamento
+        conflito = False
+        for oi, of in ocupados:
+            if intervalo_conflita(inicio, fim_dt.strftime("%H:%M"), oi, of):
+                conflito = True
+                break
+
+        if conflito:
+            continue
+
+        horarios_validos.append(inicio)
+
+    return {"horarios": horarios_validos}
 
 @app.post("/agendamentos")
 def criar_cliente(a: Agendamento):

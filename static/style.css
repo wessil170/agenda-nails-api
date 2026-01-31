@@ -235,3 +235,25 @@ h1 {
 .client-btn:hover {
   background: #e98985;
 }
+/* ==========================
+   ADMIN – MOBILE MAIS LARGO
+   ========================== */
+
+/* mobile */
+@media (max-width: 768px) {
+  body.admin-page {
+    padding: 6px;
+  }
+
+  body.admin-page .admin-container,
+  body.admin-page section,
+  body.admin-page .client-card {
+    max-width: 100%;
+    margin: 0;
+  }
+
+  body.admin-page h1,
+  body.admin-page h2 {
+    text-align: center;
+  }
+}
