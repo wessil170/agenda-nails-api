@@ -1,92 +1,150 @@
+/* ======================
+   VARIÁVEIS (NEUTRO SaaS)
+   ====================== */
+
+:root {
+  --bg: #f4f6fb;
+  --card: #ffffff;
+  --primary: #2563eb;
+  --primary-soft: #e0e7ff;
+  --danger: #ef4444;
+  --text: #1f2937;
+  --muted: #6b7280;
+}
+
+/* ======================
+   BASE
+   ====================== */
+
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  padding: 16px;
+  padding: 18px;
   font-family: Arial, sans-serif;
-  background: #fff6f6;
-  color: #222;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ======================
+   LINKS
+   ====================== */
+
+a {
+  color: var(--primary);
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
 }
 
 /* ======================
    TÍTULOS
    ====================== */
 
-h1, h2 {
+h1 {
   text-align: center;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
+}
+
+.section-title {
+  text-align: center;
+  font-size: 1rem;
+  margin-bottom: 10px;
+  color: var(--text);
 }
 
 /* ======================
-   FORMULÁRIOS
+   FORMULÁRIO ADMIN
    ====================== */
 
-form {
-  background: #fff;
-  padding: 16px;
+form.admin-form {
+  background: var(--card);
+  padding: 18px;
+  border-radius: 16px;
+  margin-bottom: 22px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+input,
+select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  font-size: 0.95rem;
+}
+
+/* botão principal */
+form.admin-form button {
+  width: 100%;
+  padding: 14px;
   border-radius: 14px;
+  border: none;
+  background: var(--primary);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+form.admin-form button:hover {
+  opacity: 0.95;
+}
+
+/* ======================
+   SEÇÕES / CARDS
+   ====================== */
+
+section {
+  background: var(--card);
+  padding: 16px;
+  border-radius: 16px;
   margin-bottom: 18px;
   box-shadow: 0 6px 18px rgba(0,0,0,0.08);
 }
 
-input, select {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 10px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
-  font-size: 1rem;
-}
-
-button {
-  padding: 12px;
-  border-radius: 12px;
-  border: none;
-  background: #111;
-  color: #fff;
-  font-size: 1rem;
-  cursor: pointer;
-}
-
 /* ======================
-   SEÇÕES (ADMIN)
+   FILTROS (MÊS / SEMANA / DIA)
    ====================== */
 
-section {
-  background: #fff;
-  padding: 14px;
-  border-radius: 14px;
-  margin-bottom: 16px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+.months-grid,
+.weeks-list,
+.days-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
 }
-
-/* ======================
-   BOTÕES DE MÊS / SEMANA / DIA
-   ====================== */
 
 .month-btn,
 .week-btn,
 .day-btn {
-  background: #f4a7a3;
-  color: #fff;
+  background: var(--primary-soft);
+  color: var(--primary);
   border: none;
-  border-radius: 12px;
-  padding: 10px 14px;
-  margin: 4px;
-  font-size: 0.9rem;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
   cursor: pointer;
+  width: auto;
 }
 
 .month-btn.active,
 .week-btn.active,
 .day-btn.active {
-  background: #111;
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
 /* ======================
-   LISTA DA AGENDA
+   AGENDA DO DIA
    ====================== */
 
 ul {
@@ -99,23 +157,57 @@ li {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px;
+  padding: 10px 12px;
   margin-bottom: 8px;
-  background: #fff;
+  background: #f9fafb;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  font-size: 0.9rem;
 }
 
 /* botão cancelar */
 li button {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: #f46b6b;
+  background: var(--danger);
   color: #fff;
   border: none;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
+  font-weight: bold;
   cursor: pointer;
+}
+
+/* ======================
+   DETAILS / SUMMARY
+   ====================== */
+
+.admin-form summary {
+  background: var(--primary);
+  color: #fff;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  text-align: center;
+  margin-bottom: 16px;
+  list-style: none;
+}
+
+.admin-form summary::-webkit-details-marker {
+  display: none;
+}
+
+/* ======================
+   UTILIDADES
+   ====================== */
+
+.hidden {
+  display: none;
+}
+
+.admin-old-content {
+  display: none;
 }
 
 /* ======================
@@ -124,10 +216,10 @@ li button {
 
 @media (max-width: 768px) {
   body {
-    padding: 12px;
+    padding: 14px;
   }
-}
 
-.admin-old-content {
-  display: none;
+  li {
+    font-size: 0.85rem;
+  }
 }

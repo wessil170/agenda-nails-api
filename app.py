@@ -1,14 +1,18 @@
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, HTTPException, Request, Form, status
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.middleware.sessions import SessionMiddleware 
 from pydantic import BaseModel
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from collections import defaultdict
 from urllib.parse import quote
+from fastapi import Depends
+import sqlite3
 
 from database import criar_tabela, get_connection
+from security import verificar_senha
 
 # =====================
 # APP
@@ -17,6 +21,11 @@ from database import criar_tabela, get_connection
 BASE_DIR = Path(__file__).resolve().parent
 
 app = FastAPI(title="Agenda Nail Designer")
+
+app.add_middleware(
+    SessionMiddleware,
+    secret_key="chave-super-secreta"
+)
 
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
@@ -169,12 +178,22 @@ Agendamento confirmado:
         "https://wa.me/5551991156840?text="+quote(msg)
     }
 
+def admin_logado(request: Request):
+    if "admin_id" not in request.session:
+        raise HTTPException(
+            status_code=status.HTTP_302_FOUND,
+            headers={"Location": "/login"}
+        )
+
 # =====================
 # ADMIN
 # =====================
 
 @app.get("/admin", response_class=HTMLResponse)
-def admin(request: Request):
+def admin(
+    request: Request,
+    dep=Depends(admin_logado)
+):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
@@ -210,14 +229,82 @@ def admin(request: Request):
     )
 
 @app.post("/admin/agendamentos")
-def admin_add(a: Agendamento):
+def admin_add(
+    a: Agendamento,
+    dep=Depends(admin_logado)
+):
     return criar_cliente(a)
 
 @app.post("/admin/cancelar/{id}")
-def cancelar(id:int):
+def cancelar(
+    id: int,
+    dep=Depends(admin_logado)
+):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM agendamentos WHERE id = ?", (id,))
     conn.commit()
     conn.close()
-    return {"ok":True}
+    return {"ok": True}
+
+# 👉 MOSTRA A PÁGINA
+@app.get("/login")
+def pagina_login(request: Request):
+    return templates.TemplateResponse(
+        "login.html",
+        {"request": request}
+    )
+
+# 👉 RECEBE O FORMULÁRIO
+@app.post("/login")
+def processar_login(
+    request: Request,
+    email: str = Form(...),
+    password: str = Form(...)
+):
+    admin = buscar_admin_por_email(email)
+
+    if not admin:
+       return templates.TemplateResponse(
+    "login.html",
+    {
+        "request": request,
+        "erro": "Email ou senha inválidos"
+    }
+)
+
+    if not verificar_senha(password, admin["password_hash"]):
+       return templates.TemplateResponse(
+    "login.html",
+    {
+        "request": request,
+        "erro": "Email ou senha inválidos"
+    }
+)
+
+    request.session["admin_id"] = admin["id"]
+    return RedirectResponse("/admin", status_code=302)
+
+def buscar_admin_por_email(email: str):
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT id, email, password_hash FROM admins WHERE email = ?",
+        (email,)
+    )
+    row = cursor.fetchone()
+    conn.close()
+
+    if not row:
+        return None
+
+    return {
+        "id": row[0],
+        "email": row[1],
+        "password_hash": row[2]
+    }
+@app.get("/logout")
+def logout(request: Request):
+    request.session.clear()
+    return RedirectResponse("/login", status_code=302)

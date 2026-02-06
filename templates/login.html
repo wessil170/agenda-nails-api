@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Admin</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+  display: flex;
+  flex-direction: column;   /* 👈 chave */
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.login-box {
+  background: white;
+  padding: 30px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 350px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+input {
+  width: 90%;              /* 👈 mesma largura do botão */
+  margin: 10px auto 0;     /* 👈 centraliza */
+  padding: 12px;
+  border-radius: 6px;      /* 👈 menos quadrado */
+  border: 1px solid #ccc;
+  display: block;
+  font-size: 14px;
+}
+
+button {
+  width: 50%;              /* 👈 menor que os inputs */
+  margin: 10px auto 0;     /* 👈 centraliza */
+  padding: 12px;
+  background: #6c5ce7;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  display: block;
+}
+</style>
+
+</head>
+<body>
+
+<div class="header">
+  <h2>Painel de Agendamentos</h2>
+  <p style="color:#666; font-size:14px;">
+    Gerencie seus horários e atendimentos
+  </p>
+</div>
+
+{% if erro %}
+  <p style="color: red; font-weight: bold;">
+    {{ erro }}
+  </p>
+{% endif %}
+
+<div class="login-box">
+
+    <form method="post" action="/login">
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="password" name="password" placeholder="Senha" required>
+        <button type="submit">Entrar</button>
+    </form>
+
+</div>
+
+</body>
+</html>
