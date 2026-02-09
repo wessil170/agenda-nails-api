@@ -265,22 +265,13 @@ def processar_login(
     admin = buscar_admin_por_email(email)
 
     if not admin:
-       return templates.TemplateResponse(
-    "login.html",
-    {
-        "request": request,
-        "erro": "Email ou senha inválidos"
-    }
-)
+        raise HTTPException(status_code=401, detail="Credenciais inválidas")
 
-    if not verificar_senha(password, admin["password_hash"]):
-       return templates.TemplateResponse(
-    "login.html",
-    {
-        "request": request,
-        "erro": "Email ou senha inválidos"
-    }
-)
+    try:
+        if not verificar_senha(password, admin["password_hash"]):
+            raise HTTPException(status_code=401, detail="Credenciais inválidas")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Credenciais inválidas")
 
     request.session["admin_id"] = admin["id"]
     return RedirectResponse("/admin", status_code=302)
