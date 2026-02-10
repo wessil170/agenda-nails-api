@@ -32,7 +32,7 @@ templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 criar_tabela()
 
-# 🔐 cria admin padrão se não existir (ambiente inicial)
+# 🔐 cria admin padrão (RESET ambiente inicial)
 conn = sqlite3.connect("database.db")
 cursor = conn.cursor()
 
@@ -44,14 +44,12 @@ CREATE TABLE IF NOT EXISTS admins (
 )
 """)
 
-cursor.execute("SELECT COUNT(*) FROM admins")
-total = cursor.fetchone()[0]
+cursor.execute("DELETE FROM admins")
 
-if total == 0:
-    cursor.execute(
-        "INSERT INTO admins (email, password_hash) VALUES (?, ?)",
-        ("admin@teste.com", criar_hash("123456"))
-    )
+cursor.execute(
+    "INSERT INTO admins (email, password_hash) VALUES (?, ?)",
+    ("admin@teste.com", criar_hash("123456"))
+)
 
 conn.commit()
 conn.close()
