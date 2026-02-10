@@ -12,7 +12,7 @@ from fastapi import Depends
 import sqlite3
 
 from database import criar_tabela, get_connection
-from security import verificar_senha
+from security import verificar_senha, criar_hash
 
 # =====================
 # APP
@@ -31,6 +31,30 @@ app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 criar_tabela()
+
+# 🔐 cria admin padrão se não existir (ambiente inicial)
+conn = sqlite3.connect("database.db")
+cursor = conn.cursor()
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS admins (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE,
+    password_hash TEXT
+)
+""")
+
+cursor.execute("SELECT COUNT(*) FROM admins")
+total = cursor.fetchone()[0]
+
+if total == 0:
+    cursor.execute(
+        "INSERT INTO admins (email, password_hash) VALUES (?, ?)",
+        ("admin@teste.com", criar_hash("123456"))
+    )
+
+conn.commit()
+conn.close()
 
 # =====================
 # CONFIGURAÇÕES
